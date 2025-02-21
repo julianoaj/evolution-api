@@ -11,7 +11,7 @@ import { eventManager, waMonitor } from '@api/server.module';
 import { Events, wa } from '@api/types/wa.types';
 import { Auth, Chatwoot, ConfigService, HttpServer } from '@config/env.config';
 import { Logger } from '@config/logger.config';
-import { NotFoundException } from '@exceptions';
+import { BadRequestException, NotFoundException } from '@exceptions';
 import { Contact, Message, Prisma } from '@prisma/client';
 import { createJid } from '@utils/createJid';
 import { WASocket } from 'baileys';
@@ -656,15 +656,17 @@ export class ChannelStartupService {
   }
 
   public async fetchStatusMessage(query: any) {
-    return await this.prismaRepository.messageUpdate.findMany({
-      where: {
-        instanceId: this.instanceId,
-        remoteJid: query.where?.remoteJid,
-        keyId: query.where?.id,
-      },
-      skip: query.offset * (query?.page === 1 ? 0 : (query?.page as number) - 1),
-      take: query.offset,
-    });
+    throw new BadRequestException(query);
+
+    // return await this.prismaRepository.messageUpdate.findMany({
+    //   where: {
+    //     instanceId: this.instanceId,
+    //     remoteJid: query.where?.remoteJid,
+    //     keyId: query.where?.id,
+    //   },
+    //   skip: query.offset * (query?.page === 1 ? 0 : (query?.page as number) - 1),
+    //   take: query.offset,
+    // });
   }
 
   public async fetchChats(query: any) {

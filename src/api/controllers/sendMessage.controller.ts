@@ -29,15 +29,30 @@ function isBase64 (str: string): boolean {
   return str.includes('base64')
 }
 
-function decodeBase64ToFile (str: string, file?: any) {
+function decodeBase64ToFile (str: string) {
   const base64Data = str.replace(/^data:.*?;base64,/, '');
 
   const buffer = Buffer.from(base64Data, 'base64');
 
-  file = {
-    buffer,
-    mimetype: 'image/png',
+  return {
+    buffer
   };
+}
+
+function getMimeType(base64String: string): string {
+  const matches = base64String.match(/^data:([A-Za-z-+\/]+);base64,/);
+  if (matches && matches.length > 1) {
+    return matches[1];
+  }
+  
+  // Default mime types based on common patterns
+  if (base64String.includes('/9j/')) return 'image/jpeg';
+  if (base64String.includes('iVBORw0KGgo')) return 'image/png';
+  if (base64String.includes('R0lGOD')) return 'image/gif';
+  if (base64String.includes('SUQzBAAAAAAAI')) return 'audio/mpeg';
+  if (base64String.includes('AAAAFGZ0eXBtcDQy')) return 'video/mp4';
+  
+  return 'application/octet-stream';
 }
 
 export class SendMessageController {
@@ -57,9 +72,13 @@ export class SendMessageController {
     }
 
     if (isBase64(data.media)) {
-      decodeBase64ToFile(data.media, file)
+      try {
+        file = decodeBase64ToFile(data.media)
   
-      data.media = undefined;
+        data.media = undefined;
+      } catch (error) {
+        throw new BadRequestException('Invalid base64 media content');
+      }
   
       return await this.waMonitor.waInstances[instanceName].mediaMessage(data, file);
     }

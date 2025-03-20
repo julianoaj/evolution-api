@@ -57,7 +57,7 @@ export class SendMessageController {
     }
 
     if (isBase64(data.media)) {
-      // decodeBase64ToFile(data.media, file)
+      decodeBase64ToFile(data.media, file)
   
       data.media = undefined;
   

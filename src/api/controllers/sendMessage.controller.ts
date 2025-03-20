@@ -41,6 +41,18 @@ export class SendMessageController {
       throw new BadRequestException('For base64 the file name must be informed.');
     }
 
+    const base64Data = data.media.replace(/^data:.*?;base64,/, '');
+
+    const buffer = Buffer.from(base64Data, 'base64');
+
+    file = {
+      buffer,
+      mimetype: 'image/png',
+      originalname: 'imagem.png'
+    };
+
+    data.media = undefined;
+
     return await this.waMonitor.waInstances[instanceName].mediaMessage(data, file);
 
     // if (file || isURL(data?.media) || isBase64(data?.media)) {

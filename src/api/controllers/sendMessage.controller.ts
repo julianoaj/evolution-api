@@ -41,10 +41,12 @@ export class SendMessageController {
       throw new BadRequestException('For base64 the file name must be informed.');
     }
 
-    if (file || isURL(data?.media) || isBase64(data?.media)) {
-      return await this.waMonitor.waInstances[instanceName].mediaMessage(data, file);
-    }
-    throw new BadRequestException('Owned media must be a url or base64');
+    return await this.waMonitor.waInstances[instanceName].mediaMessage(data, file);
+
+    // if (file || isURL(data?.media) || isBase64(data?.media)) {
+    //   return await this.waMonitor.waInstances[instanceName].mediaMessage(data, file);
+    // }
+    // throw new BadRequestException('Owned media must be a url or base64');
   }
 
   public async sendPtv({ instanceName }: InstanceDto, data: SendPtvDto, file?: any) {

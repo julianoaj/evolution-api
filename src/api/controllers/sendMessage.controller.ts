@@ -16,13 +16,28 @@ import {
 } from '@api/dto/sendMessage.dto';
 import { WAMonitoringService } from '@api/services/monitor.service';
 import { BadRequestException } from '@exceptions';
-import { isBase64, isURL } from 'class-validator';
+import { isURL } from 'class-validator';
 
 function isEmoji(str: string) {
   if (str === '') return true;
   
   const emojiRegex = /^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F000}-\u{1F02F}\u{1F0A0}-\u{1F0FF}\u{1F100}-\u{1F64F}\u{1F680}-\u{1F6FF}]$/u;
   return emojiRegex.test(str);
+}
+
+function isBase64 (str: string): boolean {
+  return str.includes('base64')
+}
+
+function decodeBase64ToFile (str: string, file?: any) {
+  const base64Data = str.replace(/^data:.*?;base64,/, '');
+
+  const buffer = Buffer.from(base64Data, 'base64');
+
+  file = {
+    buffer,
+    mimetype: 'image/png',
+  };
 }
 
 export class SendMessageController {
@@ -41,24 +56,15 @@ export class SendMessageController {
       throw new BadRequestException('For base64 the file name must be informed.');
     }
 
-    const base64Data = data.media.replace(/^data:.*?;base64,/, '');
+    if (isBase64(data.media)) {
+      // decodeBase64ToFile(data.media, file)
+  
+      data.media = undefined;
+  
+      return await this.waMonitor.waInstances[instanceName].mediaMessage(data, file);
+    }
 
-    const buffer = Buffer.from(base64Data, 'base64');
-
-    file = {
-      buffer,
-      mimetype: 'image/png',
-      originalname: 'imagem.png'
-    };
-
-    data.media = undefined;
-
-    return await this.waMonitor.waInstances[instanceName].mediaMessage(data, file);
-
-    // if (file || isURL(data?.media) || isBase64(data?.media)) {
-    //   return await this.waMonitor.waInstances[instanceName].mediaMessage(data, file);
-    // }
-    // throw new BadRequestException('Owned media must be a url or base64');
+    throw new BadRequestException('Owned media must be a url or base64');
   }
 
   public async sendPtv({ instanceName }: InstanceDto, data: SendPtvDto, file?: any) {

@@ -39,22 +39,6 @@ function decodeBase64ToFile (str: string) {
   };
 }
 
-function getMimeType(base64String: string): string {
-  const matches = base64String.match(/^data:([A-Za-z-+\/]+);base64,/);
-  if (matches && matches.length > 1) {
-    return matches[1];
-  }
-  
-  // Default mime types based on common patterns
-  if (base64String.includes('/9j/')) return 'image/jpeg';
-  if (base64String.includes('iVBORw0KGgo')) return 'image/png';
-  if (base64String.includes('R0lGOD')) return 'image/gif';
-  if (base64String.includes('SUQzBAAAAAAAI')) return 'audio/mpeg';
-  if (base64String.includes('AAAAFGZ0eXBtcDQy')) return 'video/mp4';
-  
-  return 'application/octet-stream';
-}
-
 export class SendMessageController {
   constructor(private readonly waMonitor: WAMonitoringService) {}
 
@@ -69,6 +53,10 @@ export class SendMessageController {
   public async sendMedia({ instanceName }: InstanceDto, data: SendMediaDto, file?: any) {
     if (isBase64(data?.media) && !data?.fileName && data?.mediatype === 'document') {
       throw new BadRequestException('For base64 the file name must be informed.');
+    }
+
+    if ((file || isURL(data?.media) && !isBase64(data.media)) ) {
+      return await this.waMonitor.waInstances[instanceName].mediaMessage(data, file);
     }
 
     if (isBase64(data.media)) {

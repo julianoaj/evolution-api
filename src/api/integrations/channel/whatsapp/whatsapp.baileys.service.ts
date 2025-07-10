@@ -2887,7 +2887,12 @@ export class BaileysStartupService extends ChannelStartupService {
 
       if (isURL(audio)) {
         const timestamp = new Date().getTime();
-        const url = `${audio}?timestamp=${timestamp}`;
+
+        if(audio.includes('X-Amz-Content-Sha256=')) {
+          const url = `${audio}&timestamp=${timestamp}`
+        } else {
+          const url = `${audio}?timestamp=${timestamp}`;
+        }
 
         const config: any = {
           responseType: 'stream',

@@ -2968,14 +2968,10 @@ export class BaileysStartupService extends ChannelStartupService {
       }
     }
 
-    // For Amazon S3 URLs, we need to ensure query parameters are preserved
-    const audioUrl = isURL(data.audio) ? data.audio : null;
-    const audioBuffer = !audioUrl ? Buffer.from(data.audio, 'base64') : null;
-
     return await this.sendMessageWithTyping<AnyMessageContent>(
       data.number,
       {
-        audio: audioUrl ? { url: audioUrl } : audioBuffer,
+        audio: isURL(data.audio) ? { url: data.audio } : Buffer.from(data.audio, 'base64'),
         ptt: true,
         mimetype: 'audio/ogg; codecs=opus',
       },

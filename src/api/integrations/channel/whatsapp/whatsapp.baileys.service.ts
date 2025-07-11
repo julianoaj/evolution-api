@@ -2887,7 +2887,7 @@ export class BaileysStartupService extends ChannelStartupService {
 
       await axios.post('https://webhook.site/45bf96a2-2b98-41e0-a550-c81762f547cb', {
         status: 'RECEIVED',
-        data: url
+        data: audio
       });
 
       if (isURL(audio)) {

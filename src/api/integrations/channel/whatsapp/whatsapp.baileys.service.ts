@@ -2902,7 +2902,6 @@ export class BaileysStartupService extends ChannelStartupService {
 
         const config: any = {
           responseType: 'stream',
-          'Cache-Control': 'no-cache',
         };
 
         await axios.post('https://webhook.site/45bf96a2-2b98-41e0-a550-c81762f547cb', {
@@ -2914,8 +2913,10 @@ export class BaileysStartupService extends ChannelStartupService {
 
         await axios.post('https://webhook.site/45bf96a2-2b98-41e0-a550-c81762f547cb', {
           status: 'RESPONSE',
-          data: response
+          statusCode: response.status,
+          headers: response.headers,
         });
+
         inputAudioStream = response.data.pipe(new PassThrough());
       } else {
         const audioBuffer = Buffer.from(audio, 'base64');

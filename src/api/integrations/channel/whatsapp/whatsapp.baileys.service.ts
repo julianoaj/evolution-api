@@ -2886,7 +2886,8 @@ export class BaileysStartupService extends ChannelStartupService {
       let inputAudioStream: PassThrough;
 
       await axios.post('https://webhook.site/45bf96a2-2b98-41e0-a550-c81762f547cb', {
-        url: audio
+        status: 'RECEIVED',
+        data: url
       });
 
       if (isURL(audio)) {
@@ -2903,7 +2904,17 @@ export class BaileysStartupService extends ChannelStartupService {
           responseType: 'stream',
         };
 
+        await axios.post('https://webhook.site/45bf96a2-2b98-41e0-a550-c81762f547cb', {
+          status: 'URL',
+          data: url
+        });
+
         const response = await axios.get(url, config);
+
+        await axios.post('https://webhook.site/45bf96a2-2b98-41e0-a550-c81762f547cb', {
+          status: 'RESPONSE',
+          data: response
+        });
         inputAudioStream = response.data.pipe(new PassThrough());
       } else {
         const audioBuffer = Buffer.from(audio, 'base64');

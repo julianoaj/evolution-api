@@ -25,7 +25,7 @@ export class InstanceRouter extends RouterBroker {
 
         return res.status(HttpStatus.CREATED).json(response);
       })
-      .post(this.routerPath('restart'), ...guards, async (req, res) => {
+      .put(this.routerPath('restart'), ...guards, async (req, res) => {
         const response = await this.dataValidate<InstanceDto>({
           request: req,
           schema: null,

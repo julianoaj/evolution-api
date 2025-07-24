@@ -18,24 +18,17 @@ import { WAMonitoringService } from '@api/services/monitor.service';
 import { BadRequestException } from '@exceptions';
 import { isURL } from 'class-validator';
 
-function isEmoji(str: string) {
-  if (str === '') return true;
-  
-  const emojiRegex = /^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F000}-\u{1F02F}\u{1F0A0}-\u{1F0FF}\u{1F100}-\u{1F64F}\u{1F680}-\u{1F6FF}]$/u;
-  return emojiRegex.test(str);
+function isBase64(str: string): boolean {
+  return str.includes('base64');
 }
 
-function isBase64 (str: string): boolean {
-  return str.includes('base64')
-}
-
-function decodeBase64ToFile (str: string) {
+function decodeBase64ToFile(str: string) {
   const base64Data = str.replace(/^data:.*?;base64,/, '');
 
   const buffer = Buffer.from(base64Data, 'base64');
 
   return {
-    buffer
+    buffer,
   };
 }
 
@@ -69,13 +62,11 @@ export class SendMessageController {
 
     if (isBase64(data.media)) {
       try {
-        file = decodeBase64ToFile(data.media)
-  
+        file = decodeBase64ToFile(data.media);
         data.media = undefined;
       } catch (error) {
         throw new BadRequestException('Invalid base64 media content');
       }
-  
       return await this.waMonitor.waInstances[instanceName].mediaMessage(data, file);
     }
 

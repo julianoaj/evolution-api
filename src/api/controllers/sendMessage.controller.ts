@@ -16,11 +16,10 @@ import {
 } from '@api/dto/sendMessage.dto';
 import { WAMonitoringService } from '@api/services/monitor.service';
 import { BadRequestException } from '@exceptions';
-import { isURL } from 'class-validator';
+import { isBase64, isURL } from 'class-validator';
+import emojiRegex from 'emoji-regex';
 
-function isBase64(str: string): boolean {
-  return str.includes('base64');
-}
+const regex = emojiRegex();
 
 function decodeBase64ToFile(str: string) {
   const base64Data = str.replace(/^data:.*?;base64,/, '');
@@ -35,9 +34,8 @@ function decodeBase64ToFile(str: string) {
 function isEmoji(str: string) {
   if (str === '') return true;
 
-  const emojiRegex =
-    /^[\u{1F300}-\u{1F9FF}\u{2600}-\u{26FF}\u{2700}-\u{27BF}\u{1F000}-\u{1F02F}\u{1F0A0}-\u{1F0FF}\u{1F100}-\u{1F64F}\u{1F680}-\u{1F6FF}]$/u;
-  return emojiRegex.test(str);
+  const match = str.match(regex);
+  return match?.length === 1 && match[0] === str;
 }
 
 export class SendMessageController {

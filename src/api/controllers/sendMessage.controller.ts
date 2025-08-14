@@ -16,10 +16,14 @@ import {
 } from '@api/dto/sendMessage.dto';
 import { WAMonitoringService } from '@api/services/monitor.service';
 import { BadRequestException } from '@exceptions';
-import { isBase64, isURL } from 'class-validator';
+import { isURL } from 'class-validator';
 import emojiRegex from 'emoji-regex';
 
 const regex = emojiRegex();
+
+function isBase64(str: string): boolean {
+  return str.includes('base64');
+}
 
 function decodeBase64ToFile(str: string) {
   const base64Data = str.replace(/^data:.*?;base64,/, '');

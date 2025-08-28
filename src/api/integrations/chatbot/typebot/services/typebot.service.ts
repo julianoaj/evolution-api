@@ -581,134 +581,149 @@ export class TypebotService extends BaseChatbotService<TypebotModel, any> {
       const diff = now - sessionUpdatedAt;
       const diffInMinutes = Math.floor(diff / 1000 / 60);
 
-      if (diffInMinutes >= expire) {
-        await this.prismaRepository.integrationSession.deleteMany({
-          where: {
-            botId: findTypebot.id,
-            remoteJid: remoteJid,
-          },
-        });
+      console.log('session: ', session);
+      console.log('diffInMinutes: ', diffInMinutes);
+      console.log('expire: ', expire);
 
-        const data = await this.createNewSession(instance, {
-          enabled: findTypebot?.enabled,
-          url: url,
-          typebot: typebot,
-          expire: expire,
-          keywordFinish: keywordFinish,
-          delayMessage: delayMessage,
-          unknownMessage: unknownMessage,
-          listeningFromMe: listeningFromMe,
-          remoteJid: remoteJid,
-          pushName: msg.pushName,
-          botId: findTypebot.id,
-          prefilledVariables: prefilledVariables,
-        });
-
-        if (data?.session) {
-          session = data.session;
-        }
-
-        if (!data?.messages || data.messages.length === 0) {
-          const content = getConversationMessage(msg.message);
-
-          if (!content) {
-            if (unknownMessage) {
-              await this.sendMessageWhatsApp(waInstance, remoteJid, unknownMessage, {
-                delayMessage,
-                expire,
-                keywordFinish,
-                listeningFromMe,
-                stopBotFromMe,
-                keepOpen,
-                unknownMessage,
-              });
-              sendTelemetry('/message/sendText');
-            }
-            return;
-          }
-
-          if (keywordFinish && content.toLowerCase() === keywordFinish.toLowerCase()) {
-            if (keepOpen) {
-              await this.prismaRepository.integrationSession.update({
-                where: {
-                  id: session.id,
-                },
-                data: {
-                  status: 'closed',
-                },
-              });
-            } else {
-              await this.prismaRepository.integrationSession.deleteMany({
-                where: {
-                  botId: findTypebot.id,
-                  remoteJid: remoteJid,
-                },
-              });
-            }
-            return;
-          }
-
-          try {
-            const version = this.configService.get<Typebot>('TYPEBOT').API_VERSION;
-            let urlTypebot: string;
-            let reqData: {};
-            if (version === 'latest') {
-              urlTypebot = `${url}/api/v1/sessions/${data?.sessionId}/continueChat`;
-              reqData = {
-                message: content,
-              };
-            } else {
-              urlTypebot = `${url}/api/v1/sendMessage`;
-              reqData = {
-                message: content,
-                sessionId: data?.sessionId,
-              };
-            }
-
-            const request = await axios.post(urlTypebot, reqData);
-
-            await this.sendWAMessage(
-              instance,
-              session,
-              {
-                expire: expire,
-                keywordFinish: keywordFinish,
-                delayMessage: delayMessage,
-                unknownMessage: unknownMessage,
-                listeningFromMe: listeningFromMe,
-                stopBotFromMe: stopBotFromMe,
-                keepOpen: keepOpen,
-              },
-              remoteJid,
-              request?.data?.messages,
-              request?.data?.input,
-              request?.data?.clientSideActions,
-            );
-          } catch (error) {
-            this.logger.error(error);
-            return;
-          }
-        }
-
-        if (data?.messages && data.messages.length > 0) {
-          await this.sendWAMessage(
-            instance,
-            session,
-            {
-              expire: expire,
-              keywordFinish: keywordFinish,
-              delayMessage: delayMessage,
-              unknownMessage: unknownMessage,
-              listeningFromMe: listeningFromMe,
-              stopBotFromMe: stopBotFromMe,
-              keepOpen: keepOpen,
+      if (diffInMinutes > expire) {
+        if (keepOpen) {
+          await this.prismaRepository.integrationSession.update({
+            where: {
+              id: session.id,
             },
-            remoteJid,
-            data.messages,
-            data.input,
-            data.clientSideActions,
-          );
+            data: {
+              status: 'closed',
+            },
+          });
+        } else {
+          await this.prismaRepository.integrationSession.deleteMany({
+            where: {
+              botId: findTypebot.id,
+              remoteJid: remoteJid,
+            },
+          });
         }
+
+        // const data = await this.createNewSession(instance, {
+        //   enabled: findTypebot?.enabled,
+        //   url: url,
+        //   typebot: typebot,
+        //   expire: expire,
+        //   keywordFinish: keywordFinish,
+        //   delayMessage: delayMessage,
+        //   unknownMessage: unknownMessage,
+        //   listeningFromMe: listeningFromMe,
+        //   remoteJid: remoteJid,
+        //   pushName: msg.pushName,
+        //   botId: findTypebot.id,
+        //   prefilledVariables: prefilledVariables,
+        // });
+        //
+        // if (data?.session) {
+        //   session = data.session;
+        // }
+        //
+        // if (!data?.messages || data.messages.length === 0) {
+        //   const content = getConversationMessage(msg.message);
+        //
+        //   if (!content) {
+        //     if (unknownMessage) {
+        //       await this.sendMessageWhatsApp(waInstance, remoteJid, unknownMessage, {
+        //         delayMessage,
+        //         expire,
+        //         keywordFinish,
+        //         listeningFromMe,
+        //         stopBotFromMe,
+        //         keepOpen,
+        //         unknownMessage,
+        //       });
+        //       sendTelemetry('/message/sendText');
+        //     }
+        //     return;
+        //   }
+        //
+        //   if (keywordFinish && content.toLowerCase() === keywordFinish.toLowerCase()) {
+        //     if (keepOpen) {
+        //       await this.prismaRepository.integrationSession.update({
+        //         where: {
+        //           id: session.id,
+        //         },
+        //         data: {
+        //           status: 'closed',
+        //         },
+        //       });
+        //     } else {
+        //       await this.prismaRepository.integrationSession.deleteMany({
+        //         where: {
+        //           botId: findTypebot.id,
+        //           remoteJid: remoteJid,
+        //         },
+        //       });
+        //     }
+        //     return;
+        //   }
+        //
+        //   try {
+        //     const version = this.configService.get<Typebot>('TYPEBOT').API_VERSION;
+        //     let urlTypebot: string;
+        //     let reqData: {};
+        //     if (version === 'latest') {
+        //       urlTypebot = `${url}/api/v1/sessions/${data?.sessionId}/continueChat`;
+        //       reqData = {
+        //         message: content,
+        //       };
+        //     } else {
+        //       urlTypebot = `${url}/api/v1/sendMessage`;
+        //       reqData = {
+        //         message: content,
+        //         sessionId: data?.sessionId,
+        //       };
+        //     }
+        //
+        //     const request = await axios.post(urlTypebot, reqData);
+        //
+        //     await this.sendWAMessage(
+        //       instance,
+        //       session,
+        //       {
+        //         expire: expire,
+        //         keywordFinish: keywordFinish,
+        //         delayMessage: delayMessage,
+        //         unknownMessage: unknownMessage,
+        //         listeningFromMe: listeningFromMe,
+        //         stopBotFromMe: stopBotFromMe,
+        //         keepOpen: keepOpen,
+        //       },
+        //       remoteJid,
+        //       request?.data?.messages,
+        //       request?.data?.input,
+        //       request?.data?.clientSideActions,
+        //     );
+        //   } catch (error) {
+        //     this.logger.error(error);
+        //     return;
+        //   }
+        // }
+        //
+        // if (data?.messages && data.messages.length > 0) {
+        //   await this.sendWAMessage(
+        //     instance,
+        //     session,
+        //     {
+        //       expire: expire,
+        //       keywordFinish: keywordFinish,
+        //       delayMessage: delayMessage,
+        //       unknownMessage: unknownMessage,
+        //       listeningFromMe: listeningFromMe,
+        //       stopBotFromMe: stopBotFromMe,
+        //       keepOpen: keepOpen,
+        //     },
+        //     remoteJid,
+        //     data.messages,
+        //     data.input,
+        //     data.clientSideActions,
+        //   );
+        // }
 
         return;
       }

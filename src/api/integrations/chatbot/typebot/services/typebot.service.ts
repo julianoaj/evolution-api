@@ -581,13 +581,11 @@ export class TypebotService extends BaseChatbotService<TypebotModel, any> {
       const diff = now - sessionUpdatedAt;
       const diffInMinutes = Math.floor(diff / 1000 / 60);
 
-      if (diffInMinutes > expire) {
-        await this.prismaRepository.integrationSession.update({
+      if (diffInMinutes >= expire) {
+        await this.prismaRepository.integrationSession.deleteMany({
           where: {
-            id: session.id,
-          },
-          data: {
-            status: 'closed',
+            botId: findTypebot.id,
+            remoteJid: remoteJid,
           },
         });
 
